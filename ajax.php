@@ -28,9 +28,26 @@ require_login();
 // Require sesskey for ALL actions (simple & safest).
 require_sesskey();
 
-define('BLOCK_ROCKETCHAT_TEACHER_ROLE', 'app');
+/**
+ * Rocket.Chat global role name used to identify "teacher" (instructor/staff) users.
+ *
+ * DEPLOYMENT-SPECIFIC: Change this to the Rocket.Chat role name that represents
+ * teachers/instructors in your environment. The default value 'app' is a custom
+ * role created for a specific deployment and is unlikely to match your setup.
+ * Common alternatives include 'teacher', 'instructor', 'staff', or any custom role
+ * you have defined in your Rocket.Chat instance under Administration > Roles.
+ */
+define('BLOCK_ROCKETCHAT_TEACHER_ROLE', 'your-teacher-role-name');
 
-/** Prefix applied to Moodle-originated group/private room names in Rocket.Chat. */
+/**
+ * Prefix applied to Moodle-originated group/private room names in Rocket.Chat.
+ *
+ * DEPLOYMENT-SPECIFIC: Change this to the prefix your deployment uses to distinguish
+ * Moodle-managed rooms from other Rocket.Chat rooms. The default value 'mc_' (short
+ * for "Moodle Chat") was used in the original deployment. Rooms whose names do not
+ * begin with this prefix are treated as non-Moodle rooms and are hidden from the UI.
+ * If your rooms use no prefix, or a different prefix, update this value accordingly.
+ */
 define('BLOCK_ROCKETCHAT_MC_PREFIX', 'mc_');
 
 // Use ALPHANUMEXT to be tolerant if you add action names later.
@@ -592,7 +609,7 @@ function rocketchat_service_get_users_in_role_by_id(\GuzzleHttp\Client $client, 
 }
 
 /**
- * Refresh teachers cache from Rocket.Chat using global role "app".
+ * Refresh teachers cache from Rocket.Chat using the global role defined by BLOCK_ROCKETCHAT_TEACHER_ROLE.
  * Returns array of teachers (each: ['username' => ..., 'name' => ...]).
  *
  * This may throw exceptions; caller should handle.

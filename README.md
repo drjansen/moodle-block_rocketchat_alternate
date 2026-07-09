@@ -50,6 +50,20 @@ Install both plugins before expecting the full feature set to work.
 For general guidance on installing Moodle plugins, see the
 [Moodle plugin installation documentation](http://docs.moodle.org/en/Installing_contributed_modules_or_plugins).
 
+## Deployment-specific configuration
+
+Before using this plugin in your own environment, review and update the following
+values in `ajax.php` to match your Rocket.Chat setup:
+
+| Constant | File | Default | Description |
+|---|---|---|---|
+| `BLOCK_ROCKETCHAT_TEACHER_ROLE` | `ajax.php` | `'your-teacher-role-name'` | The Rocket.Chat global role name used to identify teachers/instructors. Set this to whichever role your Rocket.Chat instance uses for staff (e.g. `'teacher'`, `'instructor'`, `'staff'`). See *Administration > Roles* in your Rocket.Chat instance. |
+| `BLOCK_ROCKETCHAT_MC_PREFIX` | `ajax.php` | `'mc_'` | The prefix applied to Moodle-originated room names in Rocket.Chat. Only rooms whose names start with this prefix (plus all direct-message rooms) are shown in the Moodle UI. Change this if your deployment uses a different prefix or no prefix. |
+
+> **Note:** The `vendor/` directory is committed intentionally so the plugin can be
+> installed on Moodle servers that do not have Composer available. If you have Composer,
+> you can instead remove the `vendor/` directory and run `composer install` yourself.
+
 ## Configuration
 
 To allow IFrame-based Single Sign-On, configure your Rocket.Chat instance under

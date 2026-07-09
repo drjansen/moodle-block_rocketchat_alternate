@@ -173,7 +173,9 @@ function block_rocketchat_render_panel(\moodle_page $page, int $courseid = 0): s
             $type = (string)$s['t'];
             $rawname = (string)($s['fname'] ?? $s['name'] ?? 'unknown');
 
-            // Only include MC-scope rooms (mc_ group/private rooms and all DMs).
+            // Only include MC-scope rooms (rooms whose names begin with the deployment-specific
+            // prefix, or all direct-message rooms). Update the prefix literal below if your
+            // deployment uses a different room-name prefix (see BLOCK_ROCKETCHAT_MC_PREFIX in ajax.php).
             if ($type === 'd') {
                 $displayname = $rawname; // DMs use the other user's name; no prefix to strip.
             } else if (strncmp($rawname, 'mc_', 3) === 0) {
