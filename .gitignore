@@ -1,0 +1,5 @@
+settings.php.bak
+.DS_Store
+*.log
+*.bak
+*.back

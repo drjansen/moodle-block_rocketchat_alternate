@@ -1,0 +1,48 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template block_rocketchat/login
+
+    This template renders the login form for the Rocket.Chat block.
+
+    Example context (json):
+    {
+        "tmpusername": "username"
+    }
+}}
+<div id="block-rocketchat-{{uniqid}}" data-region="rocketchat">
+    <div class="container-fluid p-0">
+        <form id="rocketchat_login" method="POST" action="#">
+            <p>{{# str}} intro, block_rocketchat {{/ str}}</p>
+
+            {{! Required for Moodle CSRF protection (require_sesskey()). }}
+            <input type="hidden" name="sesskey" value="{{sesskey}}">
+
+            <div class="mb-3">
+                <label for="rocketchat_username" class="form-label">{{#str}} usernameemail {{/str}}</label>
+                <input type="text" class="form-control" id="rocketchat_username" name="rocketchat_username" value="{{tmpusername}}">
+            </div>
+
+            <div class="mb-3">
+                <label for="rocketchat_password" class="form-label">{{#str}} password {{/str}}</label>
+                <input type="password" class="form-control" id="rocketchat_password" name="rocketchat_password" value="">
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">{{#str}} login {{/str}}</button>
+        </form>
+    </div>
+</div>

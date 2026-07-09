@@ -1,0 +1,41 @@
+<?php return array(
+    'root' => array(
+        'name' => '__root__',
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
+        'reference' => '3efb7ecdc62f4af2640bd1eefb257c4a8cbe1cbe',
+        'type' => 'library',
+        'install_path' => __DIR__ . '/../../',
+        'aliases' => array(),
+        'dev' => true,
+    ),
+    'versions' => array(
+        '__root__' => array(
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => '3efb7ecdc62f4af2640bd1eefb257c4a8cbe1cbe',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../../',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'fab1en/rocket-chat-rest-client' => array(
+            'pretty_version' => '1.0',
+            'version' => '1.0.0.0',
+            'reference' => '097b148cd4a0622407906e3c0910db3ff5dcdbb9',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../fab1en/rocket-chat-rest-client',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'nategood/httpful' => array(
+            'pretty_version' => '1.0.0',
+            'version' => '1.0.0.0',
+            'reference' => 'ea02c8aedef70b9a453ce97978d9d7c413972f15',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../nategood/httpful',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+    ),
+);
