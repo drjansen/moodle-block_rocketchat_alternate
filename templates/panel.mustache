@@ -1,0 +1,465 @@
+{{!
+  Rocket.Chat panel UI (rooms list + chat iframe + new chat modal).
+
+  This template is intended to be mountable in multiple surfaces:
+  - block_rocketchat (current)
+  - a right-side drawer (future)
+  - a dedicated page (future)
+
+  Required context (example):
+  {
+    "shellid": "rocketchat_abc_shell",
+    "backid": "rocketchat_abc_back",
+    "logoutid": "rocketchat_abc_logout",
+    "logouturl": "https://moodle.example.com/blocks/rocketchat/logout.php",
+    "iframeid": "rocketchat_abc_iframe",
+    "roomfilterid": "rocketchat_abc_roomfilter",
+    "newchatid": "rocketchat_abc_newchat",
+    "modalid": "rocketchat_abc_modal",
+    "modalfilterid": "rocketchat_abc_modalfilter",
+    "modalcloseid": "rocketchat_abc_modalclose",
+    "modallistid": "rocketchat_abc_modallist",
+    "warnid": "rocketchat_abc_warn",
+    "apifail": false,
+    "rooms": [
+      { "id": "xyz", "name": "Some room", "type": "c", "unread": 3 }
+    ],
+    "configjson": "{\"shellId\":\"...\",\"ajaxUrl\":\"...\",\"sesskey\":\"...\"}"
+  }
+
+  Notes:
+  - CSS is included inline to keep the panel self-contained while prototyping.
+    Later you can move it to styles.css.
+  - JS is NOT included here; it should be handled by an AMD module which reads configjson.
+}}
+
+<div id="{{shellid}}" class="rocketchat-shell" data-rc-config="{{configjson}}">
+  {{#apifail}}
+    <div class="alert alert-warning rocketchat-alert">
+      Could not fetch Rocket.Chat rooms. Please re-login if required.
+    </div>
+  {{/apifail}}
+
+  <style>
+    .rocketchat-shell { width: 100%; }
+
+    /* --- Modern typography + palette --- */
+    .rocketchat-shell {
+      --rc-bg: #ffffff;
+      --rc-surface: #ffffff;
+      --rc-surface-2: #f8fafc;
+      --rc-border: rgba(15, 23, 42, 0.08);
+      --rc-border-strong: rgba(15, 23, 42, 0.12);
+      --rc-text: #0f172a;
+      --rc-muted: #64748b;
+      --rc-muted-2: #94a3b8;
+      --rc-primary: #4f46e5;
+      --rc-primary-2: #4338ca;
+      --rc-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+
+      color: var(--rc-text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .rocketchat-alert {
+      color: #7f1d1d;
+      background: #fff4f4;
+      border: 1px solid rgba(127, 29, 29, 0.2);
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+
+    /* Hide header unless in chat mode */
+    .rocketchat-header { display:none; }
+    .rocketchat-shell.is-chat .rocketchat-header { display:flex; }
+
+    .rocketchat-header {
+      align-items:center;
+      justify-content:space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 1px solid rgba(79, 70, 229, 0.22);
+      border-radius: 12px;
+      background: linear-gradient(180deg, #ffffff 0%, #fbfbfd 100%);
+      box-shadow: 0 8px 20px rgba(79,70,229,0.08);
+      margin-bottom: 10px;
+    }
+
+    .rocketchat-header-left {
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .rocketchat-back {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      border: 1px solid rgba(79, 70, 229, 0.22);
+      background: linear-gradient(180deg, #eef2ff 0%, #e0e7ff 100%);
+      color: var(--rc-primary-2);
+      cursor:pointer;
+      box-shadow: 0 6px 18px rgba(79,70,229,0.15);
+      transition: background 120ms ease, border-color 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+    }
+    .rocketchat-back:hover {
+      border-color: rgba(79, 70, 229, 0.35);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 26px rgba(79,70,229,0.18);
+    }
+    .rocketchat-back:active {
+      transform: translateY(0);
+      box-shadow: 0 6px 18px rgba(79,70,229,0.14);
+    }
+
+    .rocketchat-header-right {
+      display:flex;
+      align-items:center;
+      gap: 8px;
+    }
+
+    .rocketchat-logout {
+      border: 1px solid rgba(79, 70, 229, 0.22);
+      background: linear-gradient(180deg, #eef2ff 0%, #e0e7ff 100%);
+      color: var(--rc-primary-2);
+      font-weight: 800;
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .rocketchat-logout:hover {
+      border-color: rgba(79, 70, 229, 0.35);
+      filter: saturate(1.05);
+    }
+
+    /* Toolbar */
+    .rocketchat-toolbar {
+      display:flex;
+      gap: 8px;
+      align-items:center;
+      margin-bottom: 10px;
+    }
+
+    .rocketchat-roomfilter {
+      flex: 1;
+      min-width: 0;
+      border: 1px solid var(--rc-border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 13.5px;
+      line-height: 1.2;
+      outline: none;
+      background: var(--rc-surface);
+      color: var(--rc-text);
+    }
+    .rocketchat-roomfilter::placeholder { color: var(--rc-muted-2); }
+    .rocketchat-roomfilter:focus {
+      border-color: rgba(79, 70, 229, 0.45);
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.14);
+    }
+
+    .rocketchat-newchat {
+      border: 1px solid rgba(79, 70, 229, 0.22);
+      background: linear-gradient(180deg, #eef2ff 0%, #e0e7ff 100%);
+      color: var(--rc-primary-2);
+      border-radius: 12px;
+      padding: 9px 11px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      letter-spacing: -0.01em;
+    }
+    .rocketchat-newchat:hover {
+      border-color: rgba(79, 70, 229, 0.35);
+      filter: saturate(1.05);
+    }
+
+    /* Room list */
+    .rocketchat-roomlist {
+      border: 1px solid var(--rc-border);
+      border-radius: 12px;
+      padding: 10px;
+      background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+      box-shadow: 0 1px 0 rgba(15,23,42,0.03);
+    }
+
+    .rocketchat-room {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 11px 12px;
+      border-radius: 12px;
+      cursor:pointer;
+      user-select:none;
+      transition: background 120ms ease, transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+      line-height: 1.25;
+      margin: 6px 0;
+      border: 1px solid var(--rc-border);
+      background: var(--rc-surface);
+      box-shadow: 0 1px 0 rgba(15,23,42,0.02);
+    }
+
+    .rocketchat-room:hover {
+      background: #f2f6ff;
+      border-color: rgba(37,99,235,0.16);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(37,99,235,0.08);
+    }
+
+    .rocketchat-room::before {
+      content: "";
+      display: block;
+      width: 6px;
+      height: 22px;
+      border-radius: 999px;
+      background: #a5b4fc;
+      opacity: 0.9;
+      flex: 0 0 auto;
+    }
+
+    .rocketchat-room[data-rc-roomtype="d"]::before { background: #fda4af; }
+    .rocketchat-room[data-rc-roomtype="p"]::before { background: #86efac; }
+    .rocketchat-room[data-rc-roomtype="c"]::before { background: #93c5fd; }
+    .rocketchat-room[data-rc-roomtype="g"]::before { background: #fdba74; }
+
+    .rocketchat-room-name {
+      color: var(--rc-text);
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+      flex: 1;
+      padding-left: 2px;
+    }
+
+    .rocketchat-unread-badge {
+      background:#ef4444;
+      color:white;
+      font-size:12px;
+      font-weight: 800;
+      border-radius:999px;
+      padding: 2px 8px;
+      min-width: 24px;
+      text-align:center;
+      box-shadow: 0 6px 16px rgba(239, 68, 68, 0.18);
+    }
+
+    .rocketchat-unread-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #ef4444;
+      display: inline-block;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+    }
+
+    .rocketchat-empty {
+      color: var(--rc-muted-2);
+      font-size: 12px;
+      padding: 8px 10px;
+      text-align:center;
+    }
+
+    /* Chat view */
+    .rocketchat-chatview {
+      display:none;
+      border: 1px solid var(--rc-border);
+      border-radius: 12px;
+      overflow:hidden;
+      background: var(--rc-surface);
+    }
+
+    .rocketchat-chatframe { width: 100%; height: 720px; border: 0; display:block; }
+
+    .rocketchat-shell.is-chat .rocketchat-toolbar { display:none; }
+    .rocketchat-shell.is-chat .rocketchat-roomlist { display:none; }
+    .rocketchat-shell.is-chat .rocketchat-chatview { display:block; }
+
+    /* Modal */
+    .rocketchat-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(17,24,39,0.55);
+      z-index: 9999;
+    }
+    .rocketchat-modal.is-open { display:flex; }
+
+    .rocketchat-modal__panel {
+      width: min(520px, 96vw);
+      max-height: min(680px, 90vh);
+      overflow: hidden;
+      border-radius: 14px;
+      background: var(--rc-surface);
+      border: 1px solid var(--rc-border);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.25);
+      display:flex;
+      flex-direction: column;
+    }
+
+    .rocketchat-modal__top {
+      display:flex;
+      gap: 8px;
+      align-items:center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--rc-border);
+      background: linear-gradient(180deg, #ffffff 0%, #fbfbfd 100%);
+    }
+    .rocketchat-modal__title {
+      font-weight: 900;
+      font-size: 14px;
+      color: var(--rc-text);
+      letter-spacing: -0.01em;
+    }
+
+    .rocketchat-modal__close {
+      border: 1px solid rgba(79, 70, 229, 0.22);
+      background: linear-gradient(180deg, #eef2ff 0%, #e0e7ff 100%);
+      color: var(--rc-primary-2);
+      font-weight: 800;
+      border-radius: 10px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+
+    .rocketchat-modal__body {
+      padding: 10px 12px;
+      display:flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: auto;
+    }
+
+    .rocketchat-modal__warn {
+      color: #92400e;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-size: 12px;
+      display:none;
+    }
+
+    .rocketchat-modal__filter {
+      border: 1px solid var(--rc-border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 13.5px;
+      outline: none;
+      color: var(--rc-text);
+      background: var(--rc-surface);
+    }
+
+    .rocketchat-contact {
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--rc-border);
+      cursor: pointer;
+      user-select:none;
+      background: var(--rc-surface);
+      box-shadow: 0 1px 0 rgba(15,23,42,0.02);
+    }
+    .rocketchat-contact:hover { background: #f9fafb; border-color: var(--rc-border-strong); }
+
+    .rocketchat-contact__name {
+      font-weight: 800;
+      font-size: 13.5px;
+      color: var(--rc-text);
+      overflow:hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .rocketchat-contact__user {
+      font-size: 12.5px;
+      color: var(--rc-muted);
+      overflow:hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 40%;
+    }
+
+    .rocketchat-modal__empty {
+      color: var(--rc-muted-2);
+      font-size: 12px;
+      text-align:center;
+      padding: 10px 0;
+    }
+  </style>
+
+  <div class="rocketchat-header">
+    <div class="rocketchat-header-left">
+      <button type="button" id="{{backid}}" class="rocketchat-back" aria-label="Back" title="Back">
+        <span aria-hidden="true" style="font-size:20px;line-height:1;">&#8592;</span>
+      </button>
+    </div>
+    <div class="rocketchat-header-right">
+      <button type="button" id="{{logoutid}}" class="rocketchat-logout" aria-label="Logout" title="Logout from Rocket.Chat">Logout</button>
+    </div>
+  </div>
+
+  <div class="rocketchat-toolbar">
+    <input id="{{roomfilterid}}" class="rocketchat-roomfilter" type="text" placeholder="Search rooms…">
+    <button type="button" id="{{newchatid}}" class="rocketchat-newchat">New chat</button>
+  </div>
+
+  <div class="rocketchat-roomlist">
+    {{^rooms}}
+      <div class="rocketchat-empty">No conversations</div>
+    {{/rooms}}
+
+    {{#rooms}}
+      <div class="rocketchat-room"
+           data-rc-roomid="{{id}}"
+           data-rc-roomtype="{{type}}"
+           data-rc-roomname="{{name}}">
+        <div class="rocketchat-room-name">{{name}}</div>
+        {{#unread}}
+          <span class="rocketchat-unread-badge">{{unread}}</span>
+        {{/unread}}
+      </div>
+    {{/rooms}}
+  </div>
+
+  <div class="rocketchat-chatview">
+    <iframe id="{{iframeid}}" class="rocketchat-chatframe" src="about:blank" loading="lazy"></iframe>
+  </div>
+
+  <div id="{{modalid}}" class="rocketchat-modal" aria-hidden="true">
+    <div class="rocketchat-modal__panel" role="dialog" aria-modal="true" aria-label="New chat">
+      <div class="rocketchat-modal__top">
+        <div class="rocketchat-modal__title">Start a new chat</div>
+        <button type="button" id="{{modalcloseid}}" class="rocketchat-modal__close" aria-label="Close">Close</button>
+      </div>
+
+      <div class="rocketchat-modal__body">
+        <div class="rocketchat-modal__warn" id="{{warnid}}"></div>
+
+        <input id="{{modalfilterid}}" class="rocketchat-modal__filter" type="text" placeholder="Search people… (name or username)">
+        <div id="{{modallistid}}">
+          <div class="rocketchat-modal__empty">Type to search…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

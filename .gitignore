@@ -1,0 +1,11 @@
+settings.php.bak
+.DS_Store
+*.log
+*.bak
+*.back
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+Thumbs.db
