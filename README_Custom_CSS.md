@@ -1,3 +1,32 @@
+# Rocket.Chat Block — Custom CSS
+
+This file contains the CSS snippet that styles the **Rocket.Chat top-bar drawer**,
+**navbar messenger button**, and **unread-message badge** that are injected by the
+script described in [`README-rc-drawer-inject.md`](./README-rc-drawer-inject.md).
+
+It also includes optional tweaks for the Moodle **Boost theme right-side block drawer**
+if you place the block there.
+
+## Part of a two-repo setup
+
+This CSS belongs to the **block/UI plugin** in
+[drjansen/moodle-block_rocketchat_alternate](https://github.com/drjansen/moodle-block_rocketchat_alternate).
+The backend/local integration plugin in
+[drjansen/RocketMoodle_Messenger](https://github.com/drjansen/RocketMoodle_Messenger)
+must also be installed for the full system to work.
+
+## Deployment
+
+Add this CSS to your Moodle instance by one of these methods:
+
+- Paste it into the **Raw SCSS** field under *Site Administration > Appearance > Themes > Boost*.
+- Add it to your custom theme's SCSS/CSS file.
+- Paste it into a *Site Administration > Appearance > Additional HTML* **Within HEAD** block
+  wrapped in `<style>` tags.
+
+---
+
+```css
 /* -----------------------------
    Rocket.Chat / Blocks drawer
    Make right drawer wider
@@ -152,3 +181,4 @@ section.block.block_rocketchat .content {
 #rc-top-unread-badge.is-visible {
   display: inline-block;
 }
+```
