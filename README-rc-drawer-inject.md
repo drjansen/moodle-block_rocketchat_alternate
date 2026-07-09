@@ -1,3 +1,41 @@
+# Rocket.Chat Top-Bar Drawer — Injection Script
+
+This file contains the JavaScript snippet that injects the **top-navigation Rocket.Chat
+messenger button and slide-in drawer** into any Moodle page.
+
+## Overview
+
+The script:
+- Adds a Rocket.Chat icon button to the Moodle top navigation bar (next to the user menu)
+- Creates a fixed slide-in drawer containing a `<iframe>` that loads `/blocks/rocketchat/view.php`
+- Polls `ajax.php` every 15 seconds for unread messages and shows a badge on the navbar icon
+- Persists open/closed drawer state across page loads using `sessionStorage`
+- Closes the drawer on Escape key press
+
+## Part of a two-repo setup
+
+This script belongs to the **block/UI plugin** in
+[drjansen/moodle-block_rocketchat_alternate](https://github.com/drjansen/moodle-block_rocketchat_alternate).
+The backend/local integration plugin in
+[drjansen/RocketMoodle_Messenger](https://github.com/drjansen/RocketMoodle_Messenger)
+must also be installed for the full system to work.
+
+## Deployment
+
+The script is **not injected automatically** by the Moodle block. You need to add it to
+your Moodle instance manually:
+
+1. Go to *Site Administration > Appearance > Additional HTML*.
+2. Paste the snippet below into the **End of BODY** section, or add it to your theme.
+3. See also [`README_Custom_CSS.md`](./README_Custom_CSS.md) for the companion CSS that
+   styles the drawer and navbar button.
+
+> **Note:** If your deployment already injects this script through a theme or another
+> mechanism, do not add it a second time.
+
+---
+
+```html
 <script>
 (function() {
   'use strict';
@@ -314,3 +352,4 @@
   }, 250);
 })();
 </script>
+```
